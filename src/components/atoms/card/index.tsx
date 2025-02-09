@@ -1,4 +1,4 @@
-import { HTMLAttributes } from 'react';
+import { forwardRef, HTMLAttributes } from 'react';
 import styled, { DefaultTheme } from 'styled-components';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
@@ -7,11 +7,12 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }
 
-const Card = (props: CardProps & any) => {
+const Card = forwardRef((props: CardProps & any, ref) => {
   const { className = '', theme, height, children, ...restProps } = props;
 
   return (
     <StyledCard
+      ref={ref}
       className={`card-component ${className}`}
       theme={theme}
       height={height}
@@ -20,7 +21,7 @@ const Card = (props: CardProps & any) => {
       {children}
     </StyledCard>
   );
-};
+});
 
 export const StyledCard = styled('div').withConfig({
   shouldForwardProp: (prop) => !['height'].includes(prop),

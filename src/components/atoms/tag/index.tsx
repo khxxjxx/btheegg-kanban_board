@@ -1,20 +1,8 @@
 import styled from 'styled-components';
+import { TTagColor } from '@/types/tag';
 
 interface TagProps {
-  color?:
-    | 'purple'
-    | 'blue'
-    | 'cyan'
-    | 'green'
-    | 'magenta'
-    | 'pink'
-    | 'red'
-    | 'orange'
-    | 'yellow'
-    | 'volcano'
-    | 'geekblue'
-    | 'gold'
-    | 'lime';
+  color?: TTagColor;
   children: React.ReactNode;
 }
 

@@ -1,0 +1,15 @@
+export const TagColors = [
+  'purple',
+  'blue',
+  'cyan',
+  'green',
+  'magenta',
+  'pink',
+  'red',
+  'orange',
+  'yellow',
+  'volcano',
+  'geekblue',
+  'gold',
+  'lime',
+] as const;

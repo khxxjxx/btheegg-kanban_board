@@ -6,6 +6,7 @@ import reset from 'styled-reset';
 const styles = css`
   * {
     box-sizing: border-box;
+    outline: none;
   }
   body {
     height: 100vh;
@@ -21,6 +22,12 @@ const styles = css`
     -webkit-user-select: auto;
     -ms-user-select: auto;
     user-select: auto;
+    outline: none;
+    border: none;
+  }
+  input {
+    height: 24px;
+    background-color: transparent;
   }
   input:focus {
     outline: none;

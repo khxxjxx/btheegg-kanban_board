@@ -1,6 +1,7 @@
+import { forwardRef, HTMLAttributes } from 'react';
 import styled from 'styled-components';
 
-interface FlexProps {
+interface FlexProps extends HTMLAttributes<HTMLDivElement> {
   vertical?: boolean;
   wrap?: boolean;
   justify?: React.CSSProperties['justifyContent'];
@@ -10,8 +11,9 @@ interface FlexProps {
   children: React.ReactNode;
 }
 
-const Flex = (props: FlexProps) => {
+const Flex = forwardRef((props: FlexProps & any, ref) => {
   const {
+    className = '',
     children,
     vertical = false,
     wrap = false,
@@ -19,22 +21,25 @@ const Flex = (props: FlexProps) => {
     align = 'normal',
     flex = 'none',
     gap = 0,
+    ...restProps
   } = props;
 
   return (
     <StyledFlex
-      className='flex-component'
+      ref={ref}
+      className={`flex-component ${className}`}
       {...{ vertical, wrap, justify, align, flex, gap }}
+      {...restProps}
     >
       {children}
     </StyledFlex>
   );
-};
+});
 
 const StyledFlex = styled('div').withConfig({
   shouldForwardProp: (prop) =>
     !['vertical', 'wrap', 'justify', 'align', 'flex', 'gap'].includes(prop),
-})<Omit<FlexProps, 'children'>>`
+})<Pick<FlexProps, 'vertical' | 'wrap' | 'justify' | 'align' | 'flex' | 'gap'>>`
   display: flex;
   height: 100%;
   flex-direction: ${({ vertical }) => (vertical ? 'column' : 'row')};

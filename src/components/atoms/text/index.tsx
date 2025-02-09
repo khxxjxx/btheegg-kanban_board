@@ -1,12 +1,15 @@
 import styled, { css } from 'styled-components';
 import { ThemeType } from '@/styles/theme';
+import { HTMLAttributes } from 'react';
 
-interface TextProps {
+interface TextProps extends HTMLAttributes<HTMLSpanElement> {
   component?: React.ElementType;
   variant?: 'title' | 'label' | 'text' | 'description';
   size?: React.CSSProperties['fontSize'];
   color?: keyof ThemeType['color'];
   weight?: React.CSSProperties['fontWeight'];
+  contentEditable?: boolean;
+  onClick?: () => void;
   children: React.ReactNode;
 }
 
@@ -14,7 +17,12 @@ const Text = (props: TextProps) => {
   const { component = 'span', children, ...restProps } = props;
 
   return (
-    <StyledText className='text-component' as={component} {...restProps}>
+    <StyledText
+      className='text-component'
+      as={component}
+      suppressContentEditableWarning
+      {...restProps}
+    >
       {children}
     </StyledText>
   );

@@ -1,88 +1,159 @@
-import { Fragment, useState } from 'react';
-import { Badge, Button, Card, Flex, Icon, Tag, Text } from './components/atoms';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Flex, Icon, Text } from './components/atoms';
 import styled from 'styled-components';
-import { StyledCard } from './components/atoms/card';
+import { TaskList } from './components/molecules';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { groupState, projectNameState, taskState } from './store/atoms';
+import { nanoid } from 'nanoid';
+import _ from 'lodash';
 
 function App() {
-  const [projectName, setProjectName] = useState('Project No.1');
+  const [projectName, setProjectName] = useRecoilState(projectNameState);
+  const [tempProjectName, setTempProjectName] = useState(projectName);
 
-  const [list, setList] = useState([
-    { id: '1', name: '시작 전' },
-    { id: '2', name: '진행 중' },
-    { id: '3', name: '완료' },
-  ]);
+  const dragRef = useRef<HTMLDivElement>(null);
 
-  const [tasks, setTasks] = useState([
-    {
-      id: '1',
-      groupId: '2',
-      tag: { name: '관리자페이지', color: 'blue' },
-      name: '회원을 블랙리스트로 지정할 수 있는 기능을 제작합니다.',
-    },
-  ]);
+  const [groupList] = useRecoilState(groupState);
+  const [taskList, setTaskList] = useRecoilState(taskState);
+
+  const dragStart = async (e: React.DragEvent<HTMLElement>) => {
+    const target = e.target as HTMLElement;
+    e.dataTransfer.effectAllowed = 'move';
+
+    const taskId = target.dataset.taskid;
+    const groupId = target.parentElement?.dataset.groupid;
+
+    const targetIndex = taskList.findIndex(
+      (task) => task.id === taskId && task.groupId && groupId,
+    );
+
+    function dragover(e: DragEvent) {
+      e.preventDefault();
+    }
+
+    function drop(e: DragEvent) {
+      const target = e.target as HTMLElement;
+      const dropEl = target.closest('[data-groupid]') as HTMLElement;
+      const childElement = dropEl.lastElementChild as HTMLElement;
+
+      const dropGroupId = dropEl.dataset.groupid;
+      const dropTaskId = childElement?.dataset.taskid;
+
+      if (!dropTaskId || !dropGroupId) return;
+
+      const dropIndex = taskList.findIndex(
+        (task) => task.id === dropTaskId && task.groupId && dropGroupId,
+      );
+
+      const _taskList = _.cloneDeep(taskList);
+      let temp = _taskList[targetIndex];
+      temp.groupId = dropGroupId;
+      _taskList[targetIndex] = _taskList[dropIndex];
+      _taskList[dropIndex] = temp;
+
+      setTaskList(_taskList);
+
+      dragRef.current?.removeEventListener('dragover', dragover);
+      dragRef.current?.removeEventListener('drop', drop);
+    }
+
+    dragRef.current?.addEventListener('dragover', dragover);
+    dragRef.current?.addEventListener('drop', drop);
+  };
+
+  useEffect(() => {
+    setTempProjectName(projectName);
+  }, [projectName]);
 
   return (
-    <>
+    <Main>
       <Title>
-        <Text variant='title'>{projectName}</Text>
-      </Title>
-      <Flex gap={20}>
-        {list.map((item) => {
-          const currentTaskList = tasks.filter(
-            (task) => task.groupId === item.id,
-          );
-          const taskCount = currentTaskList.length;
+        <Text
+          variant='title'
+          contentEditable
+          onInput={(e) => {
+            const target = e.target as HTMLInputElement;
+            const value = target.textContent;
+            if (!value) return;
 
-          return (
-            <Flex key={item.id} vertical gap={14} flex='0 0 201px'>
-              <Flex align='center' justify='space-between' flex='0 0 28px'>
-                <Flex align='center' gap={8}>
-                  <Text variant='label'>{item.name}</Text>
-                  <Badge count={taskCount} />
-                </Flex>
-                {taskCount ? (
-                  <Button icon={<Icon type='plus' />} shape='round' />
-                ) : (
-                  <></>
-                )}
-              </Flex>
-              <TaskList taskList={currentTaskList} />
-            </Flex>
-          );
+            setTempProjectName(value);
+          }}
+          onBlur={() => setProjectName(tempProjectName)}
+        >
+          {projectName}
+        </Text>
+      </Title>
+      <Flex ref={dragRef} gap={20} onDragStart={dragStart}>
+        {groupList.map((group) => {
+          const tasks = taskList.filter((task) => task.groupId === group.id);
+
+          return <TaskList key={group.id} taskInfo={{ ...group, tasks }} />;
         })}
-        <Button color='black50' icon={<Icon type='plus' />}>
-          Add another list
-        </Button>
+
+        <CreateGroup />
       </Flex>
-    </>
+    </Main>
   );
 }
 
-const TaskList = (props: any) => {
-  const { taskList = [] } = props;
+const Main = styled.div`
+  width: 100vw;
+  height: 100vh;
+  padding: 24px;
+`;
 
-  if (!taskList.length) {
-    return (
-      <Card theme={{ color: { black0: '#ffffff66' } }} height='112px'>
-        <Flex align='center' justify='center' gap={13} vertical>
-          <Text variant='description'>지금 바로 추가해보세요.</Text>
-          <Button icon={<Icon type='plus' />} shape='round' />
-        </Flex>
-      </Card>
-    );
+const CreateGroup = () => {
+  const [createMode, setCreateMode] = useState(false);
+
+  const setGroupList = useSetRecoilState(groupState);
+
+  const ref = useRef<HTMLInputElement>(null);
+
+  function addGroup(name?: string) {
+    if (!name) return;
+
+    const newGroup = {
+      id: nanoid(16),
+      name,
+    };
+
+    setGroupList((current) => [...current, newGroup]);
+    setCreateMode(false);
   }
 
+  useEffect(() => {
+    createMode && ref.current?.focus();
+  }, [createMode]);
+
   return (
-    <Flex gap={14} vertical>
-      {taskList.map((task: any) => (
-        <Card key={task.id} draggable>
-          <Flex gap={14} vertical>
-            {task.tag && <Tag color={task.tag.color}>{task.tag.name}</Tag>}
-            <Text variant='text'>{task.name}</Text>
-          </Flex>
-        </Card>
-      ))}
-    </Flex>
+    <>
+      {createMode ? (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+
+            const target = e.target as { groupName?: { value: string } };
+            addGroup(target.groupName?.value);
+          }}
+        >
+          <input
+            ref={ref}
+            name='groupName'
+            placeholder='List name...'
+            autoComplete='off'
+            onBlur={(e) => addGroup(e.target.value)}
+          />
+        </form>
+      ) : (
+        <Button
+          color='black50'
+          icon={<Icon type='plus' />}
+          onClick={() => setCreateMode(true)}
+        >
+          Add another list
+        </Button>
+      )}
+    </>
   );
 };
 
