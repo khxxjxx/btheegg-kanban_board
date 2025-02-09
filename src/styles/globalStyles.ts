@@ -9,7 +9,7 @@ const styles = css`
     outline: none;
   }
   body {
-    height: 100vh;
+    height: 100%;
     background-color: ${({ theme }) => theme.color.black30};
   }
   a {

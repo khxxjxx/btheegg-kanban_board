@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Flex, Icon, Text } from './components/atoms';
+import { useEffect, useRef, useState } from 'react';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import styled from 'styled-components';
-import { TaskList } from './components/molecules';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { groupState, projectNameState, taskState } from './store/atoms';
 import { nanoid } from 'nanoid';
 import _ from 'lodash';
+import { groupState, projectNameState, taskState } from './store/atoms';
+import { Button, Flex, Icon, Text } from './components/atoms';
+import { TaskList } from './components/molecules';
+import Header from './components/molecules/header';
 
 function App() {
   const [projectName, setProjectName] = useRecoilState(projectNameState);
@@ -66,40 +67,64 @@ function App() {
   }, [projectName]);
 
   return (
-    <Main>
-      <Title>
-        <Text
-          variant='title'
-          contentEditable
-          onInput={(e) => {
-            const target = e.target as HTMLInputElement;
-            const value = target.textContent;
-            if (!value) return;
+    <Layout>
+      <Header userInfo={{ name: '김희진' }} />
+      <Main>
+        <Content>
+          <div>
+            <Title>
+              <Text
+                variant='title'
+                contentEditable
+                onInput={(e) => {
+                  const target = e.target as HTMLInputElement;
+                  const value = target.textContent;
+                  if (!value) return;
 
-            setTempProjectName(value);
-          }}
-          onBlur={() => setProjectName(tempProjectName)}
-        >
-          {projectName}
-        </Text>
-      </Title>
-      <Flex ref={dragRef} gap={20} onDragStart={dragStart}>
-        {groupList.map((group) => {
-          const tasks = taskList.filter((task) => task.groupId === group.id);
+                  setTempProjectName(value);
+                }}
+                onBlur={() => setProjectName(tempProjectName)}
+              >
+                {projectName}
+              </Text>
+            </Title>
+            <Flex ref={dragRef} gap={20} onDragStart={dragStart}>
+              {groupList.map((group) => {
+                const tasks = taskList.filter(
+                  (task) => task.groupId === group.id,
+                );
 
-          return <TaskList key={group.id} taskInfo={{ ...group, tasks }} />;
-        })}
+                return (
+                  <TaskList key={group.id} taskInfo={{ ...group, tasks }} />
+                );
+              })}
 
-        <CreateGroup />
-      </Flex>
-    </Main>
+              <CreateGroup />
+            </Flex>
+          </div>
+        </Content>
+      </Main>
+    </Layout>
   );
 }
 
-const Main = styled.div`
-  width: 100vw;
+const Layout = styled.div`
+  width: 100%;
+  height: 100%;
+`;
+
+const Main = styled.main`
+  padding-top: 88px;
+  width: 100%;
   height: 100vh;
-  padding: 24px;
+  min-width: 100%;
+  display: flex;
+`;
+
+const Content = styled.div`
+  flex-grow: 1;
+  padding: 64px 100px;
+  overflow-y: auto;
 `;
 
 const CreateGroup = () => {
